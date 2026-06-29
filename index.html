@@ -89,10 +89,14 @@
 
   <div style="margin-bottom:14px"><button class="cmpbtn" id="cmp">🏊 对比 Han Yi（韩艺）</button></div>
   <div class="hybar" id="hybar" style="display:none">
-    <b>韩艺 (Han Yi)</b> · 9年级 · 主项自由泳 ——
-    100 自 SCY 现 <span class="mono">53.66</span>，目标 <span class="mono">49.50</span>（sub-50）。
-    下表已切到<b>有成绩的招募生</b>，按 100 自与韩艺的接近度排序；
-    <span class="chip near">≈ 同档</span> = 差距 ≤1.5s，<span class="chip slow">绿</span> = 韩艺更快，<span class="chip fast">红</span> = 招募生更快，<span class="chip goal">目标可及</span> = 韩艺达成 49.50 即可超过。
+    <div style="margin-bottom:6px">
+      <b>韩艺 (Han Yi)</b> · 9年级 · 主项自由泳 —— SCY: 50 自 <span class="mono">23.69</span> · 100 自 <span class="mono">53.66</span>（目标 <span class="mono">49.50</span>）
+      &nbsp;&nbsp;对比项目：
+      <button class="cmpbtn" id="ev-ff50" style="padding:3px 9px">50 自</button>
+      <button class="cmpbtn" id="ev-ff100" style="padding:3px 9px">100 自</button>
+    </div>
+    下表为<b>有成绩的招募生</b>，按所选项目与韩艺的接近度排序；
+    <span class="chip near">≈ 同档</span> = 差距小，<span class="chip slow">绿</span> = 韩艺更快，<span class="chip fast">红</span> = 招募生更快，<span class="chip goal">目标可及</span> = 韩艺达成目标即可超过（仅 100 自）。
   </div>
 
   <div class="filters">
@@ -128,9 +132,12 @@ const evCN = e => { const p=e.split(' '); return p[0]+' '+(STROKE_CN[p[1]]||p[1]
 const DIV_LABEL = d => d==='D1'?'NCAA D1':d==='D2'?'NCAA D2':d==='D3'?'NCAA D3':d;
 const DIV_ORDER = ['D1','D2','D3','NAIA','NJCAA','CCCAA','U Sports'];
 let ALL = [];
-const HY = { ff100: 53.66, goal: 49.50 };
-const state = { div:'D3', conf:'', college:'', gender:'', st:'', q:'', ranked:false, transfer:false, times:false, compare:false, sortKey:'college', sortDir:1 };
-const gapStr = s => (s>=0?'+':'') + s.toFixed(2);
+// Han Yi benchmarks (SCY). 50 free is estimated from his 100-free first-50 split (no flat-start 50 on record).
+const HY = {
+  ff100: { cur:53.66, goal:49.50, label:'100 自', near:1.5, est:false },
+  ff50:  { cur:23.69, goal:null,  label:'50 自',  near:0.8, est:false },
+};
+const state = { div:'D3', conf:'', college:'', gender:'', st:'', q:'', ranked:false, transfer:false, times:false, compare:false, cmpEv:'ff100', sortKey:'college', sortDir:1 };
 
 const $ = id => document.getElementById(id);
 
@@ -145,14 +152,15 @@ function rankLabel(rk){
 }
 
 function cmpCell(r){
-  if(r.ff100==null) return '<span class="muted">—</span>';
-  const gap = r.ff100 - HY.ff100;            // >0 = recruit slower (Han Yi faster)
+  const ev=state.cmpEv, cfg=HY[ev], v=r[ev];
+  if(v==null) return '<span class="muted">—</span>';
+  const gap = v - cfg.cur;                    // >0 = recruit slower (Han Yi faster)
   let chip;
-  if(Math.abs(gap)<=1.5) chip='<span class="chip near">≈ 同档</span>';
+  if(Math.abs(gap)<=cfg.near) chip='<span class="chip near">≈ 同档</span>';
   else if(gap>0) chip='<span class="chip slow">韩艺快 '+gap.toFixed(2)+'s</span>';
   else chip='<span class="chip fast">快 '+(-gap).toFixed(2)+'s</span>';
-  const goal = (gap<0 && r.ff100>=HY.goal) ? '<span class="chip goal">目标可及</span>' : '';
-  return '<span class="gap"><span class="t">'+r.ff100.toFixed(2)+'</span></span>'+chip+goal;
+  const goal = (cfg.goal!=null && gap<0 && v>=cfg.goal) ? '<span class="chip goal">目标可及</span>' : '';
+  return '<span class="gap"><span class="t">'+v.toFixed(2)+'</span></span>'+chip+goal;
 }
 
 function inDiv(){ return ALL.filter(r => r.div === state.div); }
@@ -170,8 +178,9 @@ function filtered(){
     (!q || r.name.toLowerCase().includes(q) || r.college.toLowerCase().includes(q) || (r.hs||'').toLowerCase().includes(q) || (r.club||'').toLowerCase().includes(q))
   );
   if(state.compare){
-    list = list.filter(r => r.ff100!=null);
-    return list.sort((a,b)=> Math.abs(a.ff100-HY.ff100) - Math.abs(b.ff100-HY.ff100));
+    const ev=state.cmpEv, cur=HY[ev].cur;
+    list = list.filter(r => r[ev]!=null);
+    return list.sort((a,b)=> Math.abs(a[ev]-cur) - Math.abs(b[ev]-cur));
   }
   const k = state.sortKey, dir = state.sortDir;
   return list.sort((a,b)=> String(a[k]||'').localeCompare(String(b[k]||''))*dir);
@@ -232,7 +241,7 @@ function render(){
       <th data-k="college">学校${arrow('college')}</th>
       <th data-k="conf">联盟${arrow('conf')}</th>
       <th data-k="st">生源州${arrow('st')}</th>
-      <th class="nosort">${state.compare ? '100自 vs 韩艺 (53.66)' : '高中 / 俱乐部'}</th>
+      <th class="nosort">${state.compare ? HY[state.cmpEv].label+' vs 韩艺 ('+HY[state.cmpEv].cur.toFixed(2)+')' : '高中 / 俱乐部'}</th>
     </tr></thead><tbody>${rows}</tbody></table></div></div>`;
   $('result').querySelectorAll('th[data-k]').forEach(th=> th.onclick=()=>{
     const k=th.dataset.k;
@@ -257,12 +266,16 @@ function bind(){
   $('f-ranked').onchange = e=>{ state.ranked=e.target.checked; render(); };
   $('f-transfer').onchange = e=>{ state.transfer=e.target.checked; render(); };
   $('f-times').onchange = e=>{ state.times=e.target.checked; render(); };
+  function setEv(ev){ state.cmpEv=ev; $('ev-ff50').classList.toggle('on',ev==='ff50'); $('ev-ff100').classList.toggle('on',ev==='ff100'); render(); }
   $('cmp').onclick = ()=>{
     state.compare=!state.compare;
     $('cmp').classList.toggle('on', state.compare);
     $('hybar').style.display = state.compare?'':'none';
+    if(state.compare){ $('ev-ff100').classList.toggle('on',state.cmpEv==='ff100'); $('ev-ff50').classList.toggle('on',state.cmpEv==='ff50'); }
     render();
   };
+  $('ev-ff50').onclick = ()=> setEv('ff50');
+  $('ev-ff100').onclick = ()=> setEv('ff100');
   $('reset').onclick = ()=>{
     state.conf=state.college=state.gender=state.st=state.q=''; state.ranked=state.transfer=state.times=false;
     $('f-gender').value=''; $('f-q').value=''; $('f-ranked').checked=false; $('f-transfer').checked=false; $('f-times').checked=false;
