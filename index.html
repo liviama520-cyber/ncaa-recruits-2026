@@ -58,6 +58,18 @@
   .dash { color:#374151; }
   .note { color:var(--muted2); font-size:.72rem; margin-top:16px; }
   .empty { text-align:center; padding:48px 0; color:var(--muted2); }
+  .cmpbtn { background:#1f2937; color:#cbd5e1; border:1px solid var(--border); border-radius:6px; padding:7px 13px; font-size:.85rem; cursor:pointer; }
+  .cmpbtn.on { background:#0e7490; color:#fff; border-color:#0e7490; }
+  .hybar { background:linear-gradient(90deg,#0c4a6e,#0e1726); border:1px solid #155e75; border-radius:12px; padding:12px 16px; margin-bottom:14px; font-size:.85rem; }
+  .hybar b { color:#7dd3fc; }
+  .hybar .mono { font-family:ui-monospace,Menlo,monospace; color:#fff; }
+  .gap { font-family:ui-monospace,Menlo,monospace; font-size:.8rem; white-space:nowrap; }
+  .gap .t { color:#cbd5e1; }
+  .chip { font-size:10px; padding:1px 6px; border-radius:4px; margin-left:6px; }
+  .chip.fast { background:rgba(127,29,29,.6); color:#fca5a5; }   /* recruit faster than HY */
+  .chip.slow { background:rgba(6,78,59,.6); color:#6ee7b7; }     /* HY faster */
+  .chip.near { background:rgba(180,83,9,.7); color:#fde68a; }    /* ~same */
+  .chip.goal { background:rgba(30,58,138,.6); color:#93c5fd; }
   @media (max-width:640px){ .cards{grid-template-columns:repeat(2,1fr);} .fgrid{grid-template-columns:repeat(2,1fr);} .full{grid-column:1/-1;} }
 </style>
 </head>
@@ -73,6 +85,14 @@
     <div class="card"><div class="v" id="s-schools">–</div><div class="l">学校数</div></div>
     <div class="card"><div class="v" id="s-confs">–</div><div class="l">联盟数</div></div>
     <div class="card"><div class="v" id="s-mw">–</div><div class="l">男 / 女</div></div>
+  </div>
+
+  <div style="margin-bottom:14px"><button class="cmpbtn" id="cmp">🏊 对比 Han Yi（韩艺）</button></div>
+  <div class="hybar" id="hybar" style="display:none">
+    <b>韩艺 (Han Yi)</b> · 9年级 · 主项自由泳 ——
+    100 自 SCY 现 <span class="mono">53.66</span>，目标 <span class="mono">49.50</span>（sub-50）。
+    下表已切到<b>有成绩的招募生</b>，按 100 自与韩艺的接近度排序；
+    <span class="chip near">≈ 同档</span> = 差距 ≤1.5s，<span class="chip slow">绿</span> = 韩艺更快，<span class="chip fast">红</span> = 招募生更快，<span class="chip goal">目标可及</span> = 韩艺达成 49.50 即可超过。
   </div>
 
   <div class="filters">
@@ -108,7 +128,9 @@ const evCN = e => { const p=e.split(' '); return p[0]+' '+(STROKE_CN[p[1]]||p[1]
 const DIV_LABEL = d => d==='D1'?'NCAA D1':d==='D2'?'NCAA D2':d==='D3'?'NCAA D3':d;
 const DIV_ORDER = ['D1','D2','D3','NAIA','NJCAA','CCCAA','U Sports'];
 let ALL = [];
-const state = { div:'D3', conf:'', college:'', gender:'', st:'', q:'', ranked:false, transfer:false, times:false, sortKey:'college', sortDir:1 };
+const HY = { ff100: 53.66, goal: 49.50 };
+const state = { div:'D3', conf:'', college:'', gender:'', st:'', q:'', ranked:false, transfer:false, times:false, compare:false, sortKey:'college', sortDir:1 };
+const gapStr = s => (s>=0?'+':'') + s.toFixed(2);
 
 const $ = id => document.getElementById(id);
 
@@ -120,6 +142,17 @@ function rankLabel(rk){
   if (rk.includes('hm')) return 'HM';
   if (rk.includes('botr')) return 'BOTR';
   return rk;
+}
+
+function cmpCell(r){
+  if(r.ff100==null) return '<span class="muted">—</span>';
+  const gap = r.ff100 - HY.ff100;            // >0 = recruit slower (Han Yi faster)
+  let chip;
+  if(Math.abs(gap)<=1.5) chip='<span class="chip near">≈ 同档</span>';
+  else if(gap>0) chip='<span class="chip slow">韩艺快 '+gap.toFixed(2)+'s</span>';
+  else chip='<span class="chip fast">快 '+(-gap).toFixed(2)+'s</span>';
+  const goal = (gap<0 && r.ff100>=HY.goal) ? '<span class="chip goal">目标可及</span>' : '';
+  return '<span class="gap"><span class="t">'+r.ff100.toFixed(2)+'</span></span>'+chip+goal;
 }
 
 function inDiv(){ return ALL.filter(r => r.div === state.div); }
@@ -136,6 +169,10 @@ function filtered(){
     (!state.times || (r.top5 && r.top5.length)) &&
     (!q || r.name.toLowerCase().includes(q) || r.college.toLowerCase().includes(q) || (r.hs||'').toLowerCase().includes(q) || (r.club||'').toLowerCase().includes(q))
   );
+  if(state.compare){
+    list = list.filter(r => r.ff100!=null);
+    return list.sort((a,b)=> Math.abs(a.ff100-HY.ff100) - Math.abs(b.ff100-HY.ff100));
+  }
   const k = state.sortKey, dir = state.sortDir;
   return list.sort((a,b)=> String(a[k]||'').localeCompare(String(b[k]||''))*dir);
 }
@@ -185,7 +222,7 @@ function render(){
       <td>${r.college}</td>
       <td class="muted">${r.conf||''}</td>
       <td>${r.st||''}</td>
-      <td class="muted">${r.hs||r.club||'<span class="dash">—</span>'}</td>
+      ${state.compare ? `<td>${cmpCell(r)}</td>` : `<td class="muted">${r.hs||r.club||'<span class="dash">—</span>'}</td>`}
     </tr>${detail}`;
   }).join('');
   $('result').innerHTML = `<div class="tablewrap"><div class="scroll"><table>
@@ -195,7 +232,7 @@ function render(){
       <th data-k="college">学校${arrow('college')}</th>
       <th data-k="conf">联盟${arrow('conf')}</th>
       <th data-k="st">生源州${arrow('st')}</th>
-      <th class="nosort">高中 / 俱乐部</th>
+      <th class="nosort">${state.compare ? '100自 vs 韩艺 (53.66)' : '高中 / 俱乐部'}</th>
     </tr></thead><tbody>${rows}</tbody></table></div></div>`;
   $('result').querySelectorAll('th[data-k]').forEach(th=> th.onclick=()=>{
     const k=th.dataset.k;
@@ -220,6 +257,12 @@ function bind(){
   $('f-ranked').onchange = e=>{ state.ranked=e.target.checked; render(); };
   $('f-transfer').onchange = e=>{ state.transfer=e.target.checked; render(); };
   $('f-times').onchange = e=>{ state.times=e.target.checked; render(); };
+  $('cmp').onclick = ()=>{
+    state.compare=!state.compare;
+    $('cmp').classList.toggle('on', state.compare);
+    $('hybar').style.display = state.compare?'':'none';
+    render();
+  };
   $('reset').onclick = ()=>{
     state.conf=state.college=state.gender=state.st=state.q=''; state.ranked=state.transfer=state.times=false;
     $('f-gender').value=''; $('f-q').value=''; $('f-ranked').checked=false; $('f-transfer').checked=false; $('f-times').checked=false;
