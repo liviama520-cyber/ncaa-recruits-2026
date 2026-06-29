@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>2026 大学游泳招募库 · NCAA</title>
+<style>
+  :root { --bg:#0a0a0a; --panel:#111827; --panel2:#0f1623; --border:#1f2937; --muted:#9ca3af; --muted2:#6b7280; --blue:#3b82f6; --blue-d:#1e3a8a; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:#fff; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",Arial,sans-serif; }
+  .wrap { max-width: 1000px; margin:0 auto; padding:20px 16px 48px; }
+  h1 { font-size:1.6rem; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:.85rem; margin:0 0 18px; }
+  .tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:18px; }
+  .tab { background:#1f2937; color:var(--muted); border:none; border-radius:6px; padding:7px 13px; font-size:.85rem; cursor:pointer; transition:.15s; }
+  .tab:hover { color:#fff; }
+  .tab.active { background:var(--blue); color:#fff; }
+  .cards { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:12px 16px; }
+  .card .v { font-size:1.6rem; font-weight:700; }
+  .card .v.accent { color:var(--blue); }
+  .card .l { font-size:.72rem; color:var(--muted2); margin-top:2px; }
+  .filters { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:18px; }
+  .fgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  label.f { display:block; }
+  label.f .lab { font-size:.72rem; color:var(--muted); }
+  select, input[type=text] { width:100%; margin-top:4px; background:#1f2937; border:1px solid var(--border); border-radius:8px; padding:8px 10px; color:#fff; font-size:.85rem; }
+  .toggles { display:flex; flex-wrap:wrap; align-items:center; gap:16px; font-size:.85rem; margin-top:12px; color:#d1d5db; }
+  .toggles label { display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .reset { margin-left:auto; background:none; border:none; color:var(--blue); cursor:pointer; font-size:.85rem; }
+  .tablewrap { border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  .scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:.85rem; }
+  thead { background:var(--panel); color:var(--muted); }
+  th { text-align:left; padding:9px 12px; font-weight:500; white-space:nowrap; cursor:pointer; user-select:none; }
+  th:hover { color:#fff; }
+  th.nosort { cursor:default; }
+  td { padding:9px 12px; border-top:1px solid var(--border); white-space:nowrap; }
+  tr:hover td { background:rgba(17,24,39,.6); }
+  .badge { font-size:10px; padding:2px 6px; border-radius:4px; margin-left:8px; }
+  .badge.rank { background:rgba(30,58,138,.6); color:#93c5fd; }
+  .badge.tr { background:rgba(120,53,15,.6); color:#fcd34d; }
+  .muted { color:var(--muted); }
+  .dash { color:#374151; }
+  .note { color:var(--muted2); font-size:.72rem; margin-top:16px; }
+  .empty { text-align:center; padding:48px 0; color:var(--muted2); }
+  @media (max-width:640px){ .cards{grid-template-columns:repeat(2,1fr);} .fgrid{grid-template-columns:repeat(2,1fr);} .full{grid-column:1/-1;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>2026 大学游泳招募库</h1>
+  <p class="sub">SwimSwam · High School Class of 2026 承诺数据库 — 按级别 / 联盟 / 学校 / 性别 / 州 筛选</p>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="cards">
+    <div class="card"><div class="v accent" id="s-total">–</div><div class="l">承诺人数</div></div>
+    <div class="card"><div class="v" id="s-schools">–</div><div class="l">学校数</div></div>
+    <div class="card"><div class="v" id="s-confs">–</div><div class="l">联盟数</div></div>
+    <div class="card"><div class="v" id="s-mw">–</div><div class="l">男 / 女</div></div>
+  </div>
+
+  <div class="filters">
+    <div class="fgrid">
+      <label class="f"><span class="lab">联盟 (Conference)</span>
+        <select id="f-conf"><option value="">全部联盟</option></select></label>
+      <label class="f"><span class="lab">学校 (College)</span>
+        <select id="f-college"><option value="">全部学校</option></select></label>
+      <label class="f"><span class="lab">性别 (Gender)</span>
+        <select id="f-gender"><option value="">男 + 女</option><option value="M">男子</option><option value="W">女子</option></select></label>
+      <label class="f"><span class="lab">生源州 (Home State)</span>
+        <select id="f-state"><option value="">全部州</option></select></label>
+      <label class="f full"><span class="lab">搜索（姓名 / 学校 / 高中）</span>
+        <input type="text" id="f-q" placeholder="输入关键字…"></label>
+    </div>
+    <div class="toggles">
+      <label><input type="checkbox" id="f-ranked"> 仅 SwimSwam 排名选手</label>
+      <label><input type="checkbox" id="f-transfer"> 仅转学生 (Transfer)</label>
+      <button class="reset" id="reset" style="display:none">清除筛选</button>
+    </div>
+  </div>
+
+  <div id="result"></div>
+
+  <p class="note">数据来源：SwimSwam 2026 Recruiting Database（Anne Lepesant 维护）。仅供参考，可能存在录入误差。</p>
+</div>
+
+<script>
+const GENDER = { M:'男子', W:'女子' };
+const DIV_LABEL = d => d==='D1'?'NCAA D1':d==='D2'?'NCAA D2':d==='D3'?'NCAA D3':d;
+const DIV_ORDER = ['D1','D2','D3','NAIA','NJCAA','CCCAA','U Sports'];
+let ALL = [];
+const state = { div:'D3', conf:'', college:'', gender:'', st:'', q:'', ranked:false, transfer:false, sortKey:'college', sortDir:1 };
+
+const $ = id => document.getElementById(id);
+
+function uniqSorted(arr){ return [...new Set(arr.filter(Boolean))].sort(); }
+
+function rankLabel(rk){
+  const m = rk.match(/-(\d+)/);
+  if (m) return 'Top ' + parseInt(m[1],10);
+  if (rk.includes('hm')) return 'HM';
+  if (rk.includes('botr')) return 'BOTR';
+  return rk;
+}
+
+function inDiv(){ return ALL.filter(r => r.div === state.div); }
+
+function filtered(){
+  const q = state.q.trim().toLowerCase();
+  let list = inDiv().filter(r =>
+    (!state.conf || r.conf===state.conf) &&
+    (!state.college || r.college===state.college) &&
+    (!state.gender || r.g===state.gender) &&
+    (!state.st || r.st===state.st) &&
+    (!state.ranked || !!r.rk) &&
+    (!state.transfer || r.tr===1) &&
+    (!q || r.name.toLowerCase().includes(q) || r.college.toLowerCase().includes(q) || (r.hs||'').toLowerCase().includes(q) || (r.club||'').toLowerCase().includes(q))
+  );
+  const k = state.sortKey, dir = state.sortDir;
+  return list.sort((a,b)=> String(a[k]||'').localeCompare(String(b[k]||''))*dir);
+}
+
+function renderTabs(){
+  const divs = [...new Set(ALL.map(r=>r.div))].sort((a,b)=>DIV_ORDER.indexOf(a)-DIV_ORDER.indexOf(b));
+  $('tabs').innerHTML = divs.map(d=>`<button class="tab${d===state.div?' active':''}" data-div="${d}">${DIV_LABEL(d)}</button>`).join('');
+  $('tabs').querySelectorAll('.tab').forEach(b=> b.onclick=()=>{
+    state.div=b.dataset.div; state.conf=''; state.college=''; state.st='';
+    renderTabs(); renderFilterOptions(); render();
+  });
+}
+
+function renderFilterOptions(){
+  const d = inDiv();
+  const confs = uniqSorted(d.map(r=>r.conf));
+  const colleges = uniqSorted(d.filter(r=>!state.conf||r.conf===state.conf).map(r=>r.college));
+  const states = uniqSorted(d.map(r=>r.st));
+  $('f-conf').innerHTML = '<option value="">全部联盟</option>' + confs.map(c=>`<option ${c===state.conf?'selected':''}>${c}</option>`).join('');
+  $('f-college').innerHTML = '<option value="">全部学校</option>' + colleges.map(c=>`<option ${c===state.college?'selected':''}>${c}</option>`).join('');
+  $('f-state').innerHTML = '<option value="">全部州</option>' + states.map(s=>`<option ${s===state.st?'selected':''}>${s}</option>`).join('');
+}
+
+function render(){
+  const list = filtered();
+  $('s-total').textContent = list.length;
+  $('s-schools').textContent = new Set(list.map(r=>r.college)).size;
+  $('s-confs').textContent = new Set(list.map(r=>r.conf).filter(Boolean)).size;
+  $('s-mw').textContent = list.filter(r=>r.g==='M').length + ' / ' + list.filter(r=>r.g==='W').length;
+
+  const active = state.conf||state.college||state.gender||state.st||state.q||state.ranked||state.transfer;
+  $('reset').style.display = active ? '' : 'none';
+
+  const arrow = k => state.sortKey===k ? (state.sortDir===1?' ▲':' ▼') : '';
+  if (!list.length){ $('result').innerHTML = '<div class="empty">没有符合条件的记录</div>'; return; }
+  const rows = list.map(r=>`<tr>
+    <td>${r.name}${r.rk?`<span class="badge rank">${rankLabel(r.rk)}</span>`:''}${r.tr===1?'<span class="badge tr">转学</span>':''}</td>
+    <td>${GENDER[r.g]||r.g}</td>
+    <td>${r.college}</td>
+    <td class="muted">${r.conf||''}</td>
+    <td>${r.st||''}</td>
+    <td class="muted">${r.hs||r.club||'<span class="dash">—</span>'}</td>
+  </tr>`).join('');
+  $('result').innerHTML = `<div class="tablewrap"><div class="scroll"><table>
+    <thead><tr>
+      <th data-k="name">姓名${arrow('name')}</th>
+      <th data-k="g">性别${arrow('g')}</th>
+      <th data-k="college">学校${arrow('college')}</th>
+      <th data-k="conf">联盟${arrow('conf')}</th>
+      <th data-k="st">生源州${arrow('st')}</th>
+      <th class="nosort">高中 / 俱乐部</th>
+    </tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  $('result').querySelectorAll('th[data-k]').forEach(th=> th.onclick=()=>{
+    const k=th.dataset.k;
+    if(state.sortKey===k) state.sortDir*=-1; else { state.sortKey=k; state.sortDir=1; }
+    render();
+  });
+}
+
+function bind(){
+  $('f-conf').onchange = e=>{ state.conf=e.target.value; state.college=''; renderFilterOptions(); render(); };
+  $('f-college').onchange = e=>{ state.college=e.target.value; render(); };
+  $('f-gender').onchange = e=>{ state.gender=e.target.value; render(); };
+  $('f-state').onchange = e=>{ state.st=e.target.value; render(); };
+  $('f-q').oninput = e=>{ state.q=e.target.value; render(); };
+  $('f-ranked').onchange = e=>{ state.ranked=e.target.checked; render(); };
+  $('f-transfer').onchange = e=>{ state.transfer=e.target.checked; render(); };
+  $('reset').onclick = ()=>{
+    state.conf=state.college=state.gender=state.st=state.q=''; state.ranked=state.transfer=false;
+    $('f-gender').value=''; $('f-q').value=''; $('f-ranked').checked=false; $('f-transfer').checked=false;
+    renderFilterOptions(); render();
+  };
+}
+
+fetch('recruits-2026.json').then(r=>r.json()).then(d=>{
+  ALL = d; renderTabs(); renderFilterOptions(); bind(); render();
+}).catch(e=>{ $('result').innerHTML='<div class="empty">数据加载失败：'+e+'</div>'; });
+</script>
+</body>
+</html>
