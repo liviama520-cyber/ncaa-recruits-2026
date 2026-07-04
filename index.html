@@ -42,6 +42,7 @@
   .badge.rank { background:rgba(30,58,138,.6); color:#93c5fd; }
   .badge.tr { background:rgba(120,53,15,.6); color:#fcd34d; }
   .badge.times { background:rgba(6,78,59,.7); color:#6ee7b7; }
+  .badge.lcm { background:rgba(124,45,18,.7); color:#fdba74; }
   tr.has-times { cursor:pointer; }
   tr.has-times td:first-child::before { content:"\25B8"; color:#10b981; display:inline-block; width:14px; font-size:11px; }
   tr.has-times.open td:first-child::before { content:"\25BE"; }
@@ -122,7 +123,7 @@
 
   <div id="result"></div>
 
-  <p class="note">招募名单来源：SwimSwam 2026 Recruiting Database（Anne Lepesant 维护）。带「成绩」标记的选手可点击展开其 SCY 最强 5 项及最佳成绩，数据来自 SwimCloud（按 power 积分排序）；目前成绩覆盖 US News 全美前 30 大学（D1 + D3，共约 312 名 recruits）。仅供参考，可能存在匹配/录入误差。</p>
+  <p class="note">招募名单来源：SwimSwam 2026 Recruiting Database（Anne Lepesant 维护）。带「成绩」标记的选手可点击展开其 SCY 最强 5 项及最佳成绩，数据来自 SwimCloud（按 power / FINA 积分排序）；覆盖 US News 全美前 30 大学（D1 + D3）。默认展示 SCY 短池码成绩；仅有长池成绩的选手（多为国际生）标记为 <b style="color:#fdba74">成绩·长池</b>，展开为 LCM 长池米。仅供参考，可能存在匹配/录入误差。</p>
 </div>
 
 <script>
@@ -223,10 +224,12 @@ function render(){
     if(has){
       const items = r.top5.map(e=>`<div class="item"><div class="ev">${evCN(e.e)}</div><div class="tm">${e.t}</div><div class="pt">${e.p!=null?e.p+' pts':''}</div></div>`).join('');
       const link = r.scid?`<a href="https://www.swimcloud.com/swimmer/${r.scid}/" target="_blank" rel="noopener">SwimCloud 主页 ↗</a>`:'';
-      detail=`<tr class="detail" data-d="${i}" style="display:none"><td colspan="6"><div class="det-head">最强 5 项（SCY 短池码，按 SwimCloud power 积分排序） ${link}</div><div class="t5">${items}</div></td></tr>`;
+      const hdr = r.course==='LCM' ? '最强 5 项（<b style="color:#fca5a5">LCM 长池米</b>，按 FINA 积分排序）' : '最强 5 项（SCY 短池码，按 SwimCloud power 积分排序）';
+      detail=`<tr class="detail" data-d="${i}" style="display:none"><td colspan="6"><div class="det-head">${hdr} ${link}</div><div class="t5">${items}</div></td></tr>`;
     }
+    const timesBadge = has ? (r.course==='LCM' ? '<span class="badge lcm">成绩·长池</span>' : '<span class="badge times">成绩</span>') : '';
     return `<tr class="${has?'has-times':'norow'}" data-i="${i}">
-      <td>${r.name}${has?'<span class="badge times">成绩</span>':''}${r.rk?`<span class="badge rank">${rankLabel(r.rk)}</span>`:''}${r.tr===1?'<span class="badge tr">转学</span>':''}</td>
+      <td>${r.name}${timesBadge}${r.rk?`<span class="badge rank">${rankLabel(r.rk)}</span>`:''}${r.tr===1?'<span class="badge tr">转学</span>':''}</td>
       <td>${GENDER[r.g]||r.g}</td>
       <td>${r.college}</td>
       <td class="muted">${r.conf||''}</td>
